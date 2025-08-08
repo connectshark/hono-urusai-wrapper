@@ -1,0 +1,15 @@
+{
+  "name": "hono-urusai-wrapper",
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy --minify"
+  },
+  "dependencies": {
+    "hono": "^4.9.0"
+  },
+  "devDependencies": {
+    "wrangler": "^4.4.0"
+  }
+}
