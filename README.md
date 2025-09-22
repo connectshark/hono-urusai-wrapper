@@ -1,79 +1,80 @@
-# hono-urusai-wrapper
+# Hono Urusai Wrapper
 
-這是一個基於 [Cloudflare Workers](https://workers.cloudflare.com/) 和 [Hono](https://hono.dev/) 框架開發的 Telegram Bot。
+一個基於 [Cloudflare Workers](https://workers.cloudflare.com/) 和 [Hono](https://hono.dev/) 框架開發的 Telegram 機器人，作為 [Urusai](https://urusai.cc/) 服務的封裝。
 
-主要功能是接收使用者透過 Telegram 傳送的檔案，自動將其上傳至 [urusai.cc](https://urusai.cc/) 圖床，並將檔案資訊記錄到指定的 Google Sheets 中。
+此機器人允許授權的使用者透過 Telegram 快速上傳檔案至 Urusai，並查詢已上傳的檔案與相簿。
 
-## ✨ 功能
+## ✨ 主要功能
 
-*   **檔案上傳**: 接收 Telegram 使用者傳送的檔案。
-*   **大小限制**: 自動拒絕超過 20MB 的檔案。
-*   **圖床整合**: 將收到的檔案上傳到 `urusai.cc`。
-*   **Google Sheets 記錄**: 透過 Google Apps Script 將 `urusai.cc` 回傳的檔案資訊（預覽網址、刪除網址等）新增到試算表中。
-*   **即時狀態回饋**: 透過 Telegram Bot 的 `sendChatAction` 提供即時的處理狀態（例如：正在上傳檔案、正在輸入中）。
+*   **檔案上傳**: 接收並上傳檔案至 Urusai 服務。
+*   **檔案查詢**: 提供 `/query` 指令，可查詢 `file` (檔案) 或 `album` (相簿) 類型的資料。
+*   **快捷選單**: 支援 `/menu` 指令，提供視覺化的按鈕以快速執行查詢。
+*   **使用者授權**: 僅回應已在環境變數中設定的特定 Telegram User ID，忽略其他所有人的訊息。
+*   **預設回覆**: 當授權使用者傳送非指令訊息時，會自動回覆 `Ｈｅｌｌｏ`。
+*   **大小限制**: 自動拒絕超過 20MB 的檔案上傳。
 
-## 🚀 運作流程
+## ⚙️ 設定與部署
 
-1.  使用者將檔案傳送給此 Telegram Bot。
-2.  Cloudflare Worker 接收到來自 Telegram Webhook 的請求。
-3.  程式檢查檔案大小是否超過 20MB。
-4.  程式從 Telegram 下載檔案。
-5.  程式將檔案上傳到 `urusai.cc`。
-6.  程式呼叫 Google Apps Script 的 Webhook，將 `urusai.cc` 回傳的檔案資訊傳遞過去。
-7.  Google Apps Script 將資訊寫入指定的 Google Sheet。
-8.  Bot 回傳成功訊息及檔案的預覽和刪除連結給使用者。
+### 1. 前置需求
 
-## ⚙️ 開始使用
-
-### 前置需求
-
-*   [Node.js](https://nodejs.org/) 和 [Bun](https://bun.sh/)
+*   [Node.js](https://nodejs.org/) (建議版本 18.x 或以上)
+*   [Bun](https://bun.sh/) (用於安裝依賴套件)
 *   一個 [Cloudflare](https://www.cloudflare.com/) 帳號
-*   一個 Telegram Bot Token
-*   一個 Google Apps Script 的 Webhook URL
+*   已安裝並登入 [Wrangler CLI](https://developers.cloudflare.com/workers/wrangler/install-and-update/)
 
-### 安裝
+### 2. 安裝專案
 
-1.  複製此專案：
-    ```bash
-    git clone https://github.com/your-username/hono-urusai-wrapper.git
-    cd hono-urusai-wrapper
-    ```
-
-2.  安裝依賴套件：
-    ```bash
-    bun install
-    ```
-
-### 環境變數設定
-
-在專案根目錄建立一個 `.dev.vars` 檔案，並填入以下變數：
-
-```
-BOT_TOKEN="YOUR_TELEGRAM_BOT_TOKEN"
-APP_SCRIPT_URL="YOUR_GOOGLE_APPS_SCRIPT_URL"
-SECRET_TOKEN="YOUR_SECRET_TOKEN_FOR_APP_SCRIPT"
-```
-
-若要部署到 Cloudflare，您也需要在 Cloudflare Worker 的設定中加入這些環境變數。
-
-### 本地端開發
-
-使用以下指令啟動本地開發伺服器：
+複製此專案並安裝依賴套件：
 
 ```bash
-bun run dev
+git clone <your-repository-url>
+cd hono-urusai-wrapper
+bun install
 ```
 
-### 部署
+### 3. 設定環境變數 (Secrets)
 
-使用以下指令將此 Worker 部署到 Cloudflare：
+本專案使用 Cloudflare Workers 的 Secrets 來管理敏感資訊。請在專案根目錄下，執行以下指令來設定必要的環境變數：
 
 ```bash
-bun run deploy
+# 您的 Telegram Bot Token
+npx wrangler secret put BOT_TOKEN
+
+# 您的 Urusai 服務使用者名稱
+npx wrangler secret put URUSAI_USERNAME
+
+# 您的 Urusai 服務 API Token
+npx wrangler secret put URUSAI_API_TOKEN
+
+# 您自己的 Telegram User ID (用於授權)
+npx wrangler secret put MY_TELEGRAM_ID
 ```
+> **提示**: 您可以透過與 [@userinfobot](https://t.me/userinfobot) 對話來取得您的 Telegram User ID。
 
-## 📜 可用腳本
+您可以使用 `npx wrangler secret list` 來確認已設定的 secrets。
 
-*   `bun run dev`: 在本地端啟動開發伺服器。
-*   `bun run deploy`: 將 Worker 部署到 Cloudflare 並壓縮程式碼。
+### 4. 部署
+
+完成設定後，使用以下指令將此 Worker 部署到 Cloudflare：
+
+```bash
+npx wrangler deploy
+```
+> **注意**: `wrangler.jsonc` 中的 `name` 欄位定義了您在 Cloudflare 上的服務名稱。
+
+## 🤖 如何使用
+
+部署成功後，即可在 Telegram 中與您的機器人互動：
+
+*   `/menu`
+    *   傳送此指令會顯示「檔案」和「相簿」兩個按鈕，方便您快速查詢。
+
+*   `/query <type>`
+    *   直接查詢指定類型的資料。
+    *   範例: `/query file` 或 `/query album`。
+
+*   **上傳檔案**
+    *   直接將檔案（文件）傳送給機器人即可觸發上傳流程。
+
+*   **其他訊息**
+    *   若您是授權使用者，傳送任何非指令的訊息（如文字、貼圖），機器人都會回覆 `Ｈｅｌｌｏ`。

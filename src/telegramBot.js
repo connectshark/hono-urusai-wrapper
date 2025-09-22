@@ -10,10 +10,10 @@ class TelegramBot {
     })
   }
 
-  sendMessage = async ({ id, content, options }) => {
+  sendMessage = async ({ id, text, options }) => {
     const body = {
       chat_id: id,
-      text: content
+      text: text
     }
     if (options) {
       for (const key in options) {
@@ -24,6 +24,37 @@ class TelegramBot {
       }
     }
     return this.#useFetch('/sendMessage', body)
+  }
+
+  sendPhoto = async ({ id, photo, options }) => {
+    const body = {
+      chat_id: id,
+      photo: photo
+    }
+    if (options) {
+      for (const key in options) {
+        if (Object.hasOwnProperty.call(options, key)) {
+          const content = options[key]
+          body[key] = content
+        }
+      }
+    }
+    return this.#useFetch('/sendPhoto', body)
+  }
+
+  answerCallbackQuery = async ({ callback_query_id, options }) => {
+    const body = {
+      callback_query_id
+    }
+    if (options) {
+      for (const key in options) {
+        if (Object.hasOwnProperty.call(options, key)) {
+          const content = options[key]
+          body[key] = content
+        }
+      }
+    }
+    return this.#useFetch('/answerCallbackQuery', body)
   }
 
   getFile = async ({ file_id }) => {
